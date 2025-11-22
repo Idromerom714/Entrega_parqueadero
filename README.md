@@ -6,9 +6,9 @@
 Sistema completo de gestión de parqueadero que combina la **eficiencia de C++** para la lógica de negocio con la **flexibilidad de Python** para la interfaz web y simulador automatizado. Posibilidad de añadir autenticación de usuarios, persistencia de datos con SQLite, reportes en tiempo real.
 
 ## 👥 Autores
-- **Juan** - *Core/Creación de libreria C++* - [Idromerom714](https://github.com/Idromerom714)
-- **Estela** - *Backend en python/consumo de la libreria por el simulador* - [Idromerom714](https://github.com/Idromerom714)
-- **Iván** - *Conexión Core-Backend con pybind11* - [Idromerom714](https://github.com/Idromerom714)
+- **Juan** - *Core/Creación de libreria C++* -
+- **Estela** - *Backend en python/consumo de la libreria por el simulador*
+- **Iván** - *Conexión Core-Backend con pybind11*
 
 ## 📑 Tabla de Contenidos
 

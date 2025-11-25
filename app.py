@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 import parqueadero_cpp
-import placas
+#import placas
 import time
 
 app = Flask(__name__)

@@ -1,0 +1,53 @@
+name: Build Windows artifacts
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup MSYS2 (MINGW64)
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: |
+            mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-make
+            mingw-w64-x86_64-python3
+            mingw-w64-x86_64-python3-pip
+            mingw-w64-x86_64-python3-pybind11
+
+      - name: Build module and client
+        shell: bash -lc
+        run: |
+          set -e
+          echo "Using $(which python3)"
+          python3 -m pip install --user --upgrade pip
+          # Ensure pybind11 is available for python
+          python3 -m pip install --user pybind11
+          echo "Running make clean && make module && make cliente"
+          make clean || true
+          make module
+          make cliente
+
+      - name: List build outputs
+        shell: bash -lc
+        run: |
+          echo "Artifacts in workspace:"
+          ls -la || true
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-artifacts
+          path: |
+            parqueadero_cpp*.pyd
+            parqueadero_cpp*.dll
+            cliente_dispositivo.exe

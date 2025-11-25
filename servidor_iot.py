@@ -147,7 +147,7 @@ class ServidorIoT:
             print("\n📋 Vehículos actuales:")
             for placa in vehiculos:
                 tarifa = self.parqueadero.calcular_tarifa(placa)
-                print(f"   • {placa} - Tarifa actual: ${tarifa:,.0f}")
+                print(f"   • {placa} - Tarifa actual: ${tarifa}")
         
         print("="*60 + "\n")
     

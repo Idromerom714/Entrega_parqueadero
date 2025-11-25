@@ -39,7 +39,7 @@ std::string Parqueadero::registrar_entrada(const std::string& placa, const std::
 
 std::string Parqueadero::registrar_salida(const std::string& placa) {
     if (!vehiculo_presente(placa)) {
-        return "ERROR: El vehículo con placa " + placa + " no está en el parqueadero";
+        return "El vehículo con placa " + placa + "  está saliendo del parqueadero";
     }
     
     Vehiculo v = vehiculos_activos[placa];

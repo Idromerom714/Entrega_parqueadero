@@ -1,4 +1,4 @@
-#include "socket_utils.hpp"
+#include "cpp/socket_utils.hpp"
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -20,6 +20,7 @@ private:
     std::string servidor_ip;
     int servidor_puerto;
     std::vector<std::string> placas_disponibles;
+    std::vector<std::string> vehiculos_dentro;  // ← NUEVO: tracking local
     
     std::string generar_placa_aleatoria() {
         if (placas_disponibles.empty()) {
@@ -34,6 +35,36 @@ private:
             return placa;
         }
         return placas_disponibles[rand() % placas_disponibles.size()];
+    }
+    
+    std::string generar_placa_para_entrada() {
+        // ← NUEVO: Solo placas que NO están dentro
+        std::vector<std::string> disponibles;
+        for (const auto& placa : placas_disponibles) {
+            bool esta_dentro = false;
+            for (const auto& v : vehiculos_dentro) {
+                if (v == placa) {
+                    esta_dentro = true;
+                    break;
+                }
+            }
+            if (!esta_dentro) {
+                disponibles.push_back(placa);
+            }
+        }
+        
+        if (disponibles.empty()) {
+            return "";  // No hay placas disponibles
+        }
+        return disponibles[rand() % disponibles.size()];
+    }
+    
+    std::string generar_placa_para_salida() {
+        // ← NUEVO: Solo placas que SÍ están dentro
+        if (vehiculos_dentro.empty()) {
+            return "";
+        }
+        return vehiculos_dentro[rand() % vehiculos_dentro.size()];
     }
     
     std::string generar_tipo_aleatorio() {
@@ -95,15 +126,35 @@ private:
         char buffer[1024] = {0};
         int bytes = recv(sock, buffer, sizeof(buffer) - 1, 0);
         
+        bool exito = false;
         if (bytes > 0) {
             buffer[bytes] = '\0';
             std::cout << "📥 Respuesta: " << buffer << std::endl;
+            
+            // Verificar si fue exitoso
+            std::string respuesta(buffer);
+            exito = (respuesta.find("OK") != std::string::npos);
+            
+            // ← NUEVO: Actualizar tracking local
+            if (exito) {
+                if (tipo == "ENTRADA") {
+                    vehiculos_dentro.push_back(placa);
+                } else if (tipo == "SALIDA") {
+                    // Eliminar de la lista
+                    for (auto it = vehiculos_dentro.begin(); it != vehiculos_dentro.end(); ++it) {
+                        if (*it == placa) {
+                            vehiculos_dentro.erase(it);
+                            break;
+                        }
+                    }
+                }
+            }
         }
         
         CLOSE_SOCKET(sock);
         limpiar_sockets();
         
-        return true;
+        return exito;
     }
 
 public:
@@ -121,7 +172,14 @@ public:
     }
     
     void simular_entrada() {
-        std::string placa = generar_placa_aleatoria();
+        std::string placa = generar_placa_para_entrada();  // ← Usa la nueva función
+        
+        if (placa.empty()) {
+            std::cout << "\n⚠️  [" << id_dispositivo << "] No hay placas disponibles para entrada" << std::endl;
+            std::cout << "   (Todos los vehículos ya están dentro)" << std::endl;
+            return;
+        }
+        
         std::string tipo = generar_tipo_aleatorio();
         
         std::cout << "\n🚗 [" << id_dispositivo << "] Detectando ENTRADA..." << std::endl;
@@ -131,7 +189,13 @@ public:
     }
     
     void simular_salida() {
-        std::string placa = generar_placa_aleatoria();
+        std::string placa = generar_placa_para_salida();  // ← Usa la nueva función
+        
+        if (placa.empty()) {
+            std::cout << "\n⚠️  [" << id_dispositivo << "] No hay vehículos para sacar" << std::endl;
+            std::cout << "   (El parqueadero está vacío según este dispositivo)" << std::endl;
+            return;
+        }
         
         std::cout << "\n🚙 [" << id_dispositivo << "] Detectando SALIDA..." << std::endl;
         std::cout << "   Placa: " << placa << std::endl;
@@ -148,9 +212,26 @@ public:
         
         for (int i = 0; i < num_eventos; i++) {
             std::cout << "--- Evento " << (i + 1) << "/" << num_eventos << " ---" << std::endl;
+            std::cout << "📊 Estado local: " << vehiculos_dentro.size() << " vehículos dentro" << std::endl;
             
-            // 60% entrada, 40% salida
-            if (rand() % 100 < 60) {
+            // ← NUEVA LÓGICA ADAPTATIVA
+            bool hacer_entrada;
+            
+            if (vehiculos_dentro.empty()) {
+                // Si está vacío, solo entrada
+                hacer_entrada = true;
+            } else if (vehiculos_dentro.size() >= placas_disponibles.size()) {
+                // Si todos los vehículos están dentro, solo salida
+                hacer_entrada = false;
+            } else if (vehiculos_dentro.size() < 3) {
+                // Pocos vehículos, favorecer entradas (70%)
+                hacer_entrada = (rand() % 100 < 70);
+            } else {
+                // Balance normal (50-50)
+                hacer_entrada = (rand() % 2 == 0);
+            }
+            
+            if (hacer_entrada) {
                 simular_entrada();
             } else {
                 simular_salida();
@@ -163,6 +244,7 @@ public:
         }
         
         std::cout << "\n✅ Simulación completada" << std::endl;
+        std::cout << "📊 Estado final: " << vehiculos_dentro.size() << " vehículos dentro" << std::endl;
     }
     
     void modo_interactivo() {
@@ -233,4 +315,3 @@ int main(int argc, char* argv[]) {
     
     return 0;
 }
-

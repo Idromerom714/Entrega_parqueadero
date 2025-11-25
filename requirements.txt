@@ -1,0 +1,5 @@
+Flask>=2.0
+pybind11>=2.6
+# Opcionales para desarrollo
+# pytest>=7.0
+# wheel>=0.37.0

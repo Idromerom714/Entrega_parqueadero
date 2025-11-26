@@ -188,3 +188,7 @@ void ServidorParqueadero::establecer_callback(EventCallback callback) {
     evento_callback = callback;
 }
 
+
+
+
+

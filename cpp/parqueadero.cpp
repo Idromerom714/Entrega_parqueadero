@@ -141,3 +141,7 @@ double Parqueadero::calcular_horas(time_t entrada, time_t salida) const {
     return std::ceil(horas); // Redondear hacia arriba
 }
 
+
+
+
+
